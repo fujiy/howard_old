@@ -1,0 +1,9 @@
+package howard
+
+pkgs = lightyear
+
+modules    = Main, Howard
+main       = Main
+executable = howard.out
+
+opts = "--color"
