@@ -5,10 +5,6 @@ import Howard.Expr
 
 %hide Interfaces.Abs
 
--- export
--- empty : Envir
--- empty = []
-
 lookup : Name -> Envir -> Maybe Expr
 lookup x Root        = Nothing
 lookup x (Sub y e p) = if x == y then Just e else lookup x p
@@ -22,7 +18,3 @@ eval env e = case e of
         (env', a')      => (env, App (Cls env' a') b)
     Cls env' a => eval env' a
     _       => (env, e)
-
-
--- (\f.\x.f x)(\x.x)a
--- ((\y.\z.(y y) z)(\x.x))x

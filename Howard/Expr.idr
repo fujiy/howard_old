@@ -33,12 +33,3 @@ Show Expr where
 
 showP (Var x) = x
 showP a       = showParens True $ show a
-
--- neAppendl : (l1, l2 : List a) -> NonEmpty l1 -> NonEmpty (l1 ++ l2)
-
--- neApps : NonEmpty (apps a)
--- neApps (App x y) = neAppendl (apps x) [y] (neApps x)
--- neApps a         = IsNonEmpty
-
--- headApp : Expr -> Expr
--- headApp a = head (apps a)
