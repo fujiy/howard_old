@@ -16,5 +16,7 @@ eval env e = case e of
     App a b => case eval env a of
         (env', Abs (Prm s _) c) => eval (Sub s (Cls env b) env') c
         (env', a')              => (env, App (Cls env' a') b)
+    Let (Bind s _ a) b
+            => eval (Sub s (Cls env a) env) b
     Cls env' a => eval env' a
     _       => (env, e)

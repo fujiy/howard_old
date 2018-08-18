@@ -1,28 +1,38 @@
 
 module Howard.REPL
 
+import Control.Monad.State
+
 import Howard.Expr
 import Howard.Parser
 import Howard.TypeChecker
 import Howard.Interpreter
 
-loop : IO ()
+loop : StateT TopEnv IO ()
 loop = do
-    putStr "> "
-    s <- getLine
+    lift $ putStr "> "
+    s <- lift getLine
+    env <- get
     case parse s of
-        Left  s => putStrLn "parse error."
-        Right e => case typeCheck emptyTE e of
-            Left te => putStrLn $ "error: " ++ show te
-            Right t => do
-                putStr $ showP e
-                putStr " : "
-                printLn t
-                printLn . snd $ eval Root e
+        Left  s => lift $ putStrLn $ "parse error"
+        Right r => case r of
+            Left st => case typeCheckStmt env st of
+                Left te => lift $ putStrLn $ "type error: " ++ show te
+                Right b => do
+                    lift $ putStrLn $ show b
+                    modify $ (::) b
+            Right e => case typeCheckExpr env e of
+                Left te => lift $ putStrLn $ "type error: " ++ show te
+                Right t => lift $ do
+                    putStr $ showP e
+                    putStr " : "
+                    printLn t
+                    printLn . snd $ eval Root e
     loop
 
 export
 repl : IO ()
 repl = do
     putStrLn "Howard interpreter."
-    loop
+    _ <- runStateT loop []
+    pure ()

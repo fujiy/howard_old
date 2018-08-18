@@ -3,7 +3,11 @@ module Howard.TypeChecker
 
 import Howard.Expr
 
-export
+public export
+TopEnv : Type
+TopEnv = List Binding
+
+public export
 TypeEnv : Type
 TypeEnv = List (Name, TypE)
 
@@ -16,19 +20,34 @@ equal (Arr ax ay) (Arr bx by) = equal ax bx && equal ay by
 equal TUnit TUnit = True
 equal _ _         = False
 
-export
 typeCheck : TypeEnv -> Expr -> Either TypeError TypE
 typeCheck te e = case e of
-    EUnit   => Right TUnit
+    EUnit   => pure TUnit
     Var s   => maybeToEither (UnboundVar e) $ lookup s te
     App a b => do
         ta <- typeCheck te a
         tb <- typeCheck te b
         case ta of
             Arr x y =>
-                if equal x tb then Right tb
+                if equal x tb then pure tb
                               else Left $ Mismatch e x tb
             _ => Left $ Mismatch e (Arr tb TUnit) ta
     Abs (Prm s t) a => do
         ta <- typeCheck ((s, t) :: te) a
-        Right $ Arr t ta
+        pure $ Arr t ta
+    Let (Bind s _ a) b => do
+        ta <- typeCheck te a
+        typeCheck ((s, ta) :: te) b
+
+topBinds : TopEnv -> TypeEnv
+topBinds = map $ \(Bind x t _) => (x, t)
+
+export
+typeCheckExpr : TopEnv -> Expr -> Either TypeError TypE
+typeCheckExpr env = typeCheck (topBinds env)
+
+export
+typeCheckStmt : TopEnv -> Stmt -> Either TypeError Binding
+typeCheckStmt env (TopBind (Bind x _ e)) = do
+     t <- typeCheckExpr env e
+     pure $ Bind x t e
